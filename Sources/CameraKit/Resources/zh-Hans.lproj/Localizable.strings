@@ -1,0 +1,16 @@
+"camera_permission_denied" = "需要相机权限才能继续使用。";
+"camera_unavailable" = "当前设备无法使用摄像头。";
+"camera_capture_failed" = "拍摄失败，请重试。";
+"camera_processing_failed" = "处理图片时出错。";
+"camera_photo_library_unavailable" = "无法访问相册。";
+"camera_visionkit_unavailable" = "此设备不支持文稿扫描。";
+"camera_launch_button" = "拍摄/扫描";
+"camera_cancel" = "取消";
+"camera_crop_done" = "完成";
+"camera_crop_reset" = "重置";
+"camera_processing" = "处理中…";
+"camera_realtime_hint" = "拖动滑块以匹配文档高度。";
+"camera_done" = "好的";
+"camera_permission_title" = "相机权限";
+"camera_error" = "出错了";
+"camera_photo_library_denied_message" = "请前往系统设置授予相册权限以导入文件。";

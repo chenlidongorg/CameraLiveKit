@@ -1,0 +1,16 @@
+"camera_permission_denied" = "Camera access is required to continue.";
+"camera_unavailable" = "Camera hardware is unavailable.";
+"camera_capture_failed" = "Unable to capture photo. Please try again.";
+"camera_processing_failed" = "Failed to process captured images.";
+"camera_photo_library_unavailable" = "Photo library access is unavailable.";
+"camera_visionkit_unavailable" = "Document scanner is not available on this device.";
+"camera_launch_button" = "Scan";
+"camera_cancel" = "Cancel";
+"camera_crop_done" = "Done";
+"camera_crop_reset" = "Reset";
+"camera_processing" = "Processing…";
+"camera_realtime_hint" = "Adjust the frame height to match your document.";
+"camera_done" = "OK";
+"camera_permission_title" = "Camera Permission";
+"camera_error" = "Error";
+"camera_photo_library_denied_message" = "Allow Photo Library access in Settings to import files.";
