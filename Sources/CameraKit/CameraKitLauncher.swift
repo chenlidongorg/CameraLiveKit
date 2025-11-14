@@ -101,6 +101,15 @@ struct CameraKitContainerView: View {
 
     var body: some View {
         Group {
+#if targetEnvironment(macCatalyst)
+            CameraKitMacImportView(
+                configuration: configuration,
+                requiresCrop: !configuration.mode.usesDocumentScanner,
+                onDismiss: { cancelFlow() },
+                onResult: handleResults(processed:originals:),
+                onError: onError
+            )
+#else
             if configuration.mode.usesDocumentScanner {
                 CameraKitDocumentScannerView(
                     configuration: configuration,
@@ -116,6 +125,7 @@ struct CameraKitContainerView: View {
                     onError: onError
                 )
             }
+#endif
         }
         .ckInteractiveDismissDisabled(true)
     }

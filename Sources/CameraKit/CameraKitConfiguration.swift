@@ -1,50 +1,20 @@
 import Foundation
 import SwiftUI
-import AVFoundation
 
 /// Represents the workflow that CameraKit should follow.
 public enum CameraKitMode: Equatable, Sendable {
-    case realTime
-    case photo
-    case photoWithCrop
-    case scanSingle
-    case scanBatch
+    /// Standard capture flow that always routes the user to a crop editor after shooting.
+    case captureWithCrop
+    /// Document scanning flow that leverages VisionKit / VNDocumentCamera when available.
+    case scan
 
     var usesDocumentScanner: Bool {
         switch self {
-        case .scanSingle, .scanBatch:
+        case .scan:
             return true
-        default:
+        case .captureWithCrop:
             return false
         }
-    }
-}
-
-/// Extra data that will be returned alongside capture results.
-public struct CameraKitContext: Equatable, Sendable {
-    public var identifier: String
-    public var payload: [String: String]
-
-    public init(identifier: String, payload: [String: String] = [:]) {
-        self.identifier = identifier
-        self.payload = payload
-    }
-}
-
-/// Controls the output quality and down-scaling strategies.
-public struct CameraKitOutputQuality: Equatable, Sendable {
-    public var targetResolution: CGSize?
-    public var compressionQuality: CGFloat
-    public var maxOutputWidth: CGFloat?
-
-    public init(
-        targetResolution: CGSize? = nil,
-        compressionQuality: CGFloat = 0.85,
-        maxOutputWidth: CGFloat? = nil
-    ) {
-        self.targetResolution = targetResolution
-        self.compressionQuality = compressionQuality
-        self.maxOutputWidth = maxOutputWidth
     }
 }
 
@@ -59,35 +29,24 @@ public enum CameraKitEnhancement: Equatable, Sendable {
 @available(iOS 15.0, *)
 public struct CameraKitConfiguration: Equatable, Sendable {
     public var mode: CameraKitMode
-    public var defaultRealtimeHeight: CGFloat
-    public var enableLiveDetectionOverlay: Bool
-    public var allowsPostCaptureCropping: Bool
     public var enhancement: CameraKitEnhancement
     public var allowsPhotoLibraryImport: Bool
-    public var outputQuality: CameraKitOutputQuality
-    public var defaultFlashMode: AVCaptureDevice.FlashMode
-    public var context: CameraKitContext?
+    public var maxOutputWidth: CGFloat?
 
     public init(
         mode: CameraKitMode,
-        defaultRealtimeHeight: CGFloat = 0.8,
-        enableLiveDetectionOverlay: Bool = true,
-        allowsPostCaptureCropping: Bool = false,
         enhancement: CameraKitEnhancement = .auto,
         allowsPhotoLibraryImport: Bool = false,
-        outputQuality: CameraKitOutputQuality = .init(),
-        defaultFlashMode: AVCaptureDevice.FlashMode = .auto,
-        context: CameraKitContext? = nil
+        maxOutputWidth: CGFloat? = nil
     ) {
         self.mode = mode
-        self.defaultRealtimeHeight = max(0.1, min(1.0, defaultRealtimeHeight))
-        self.enableLiveDetectionOverlay = enableLiveDetectionOverlay
-        self.allowsPostCaptureCropping = allowsPostCaptureCropping || mode == .photoWithCrop
         self.enhancement = enhancement
         self.allowsPhotoLibraryImport = allowsPhotoLibraryImport
-        self.outputQuality = outputQuality
-        self.defaultFlashMode = defaultFlashMode
-        self.context = context
+        if let maxOutputWidth, maxOutputWidth <= 0 {
+            self.maxOutputWidth = nil
+        } else {
+            self.maxOutputWidth = maxOutputWidth
+        }
     }
 }
 

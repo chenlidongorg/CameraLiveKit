@@ -70,9 +70,6 @@ struct CameraKitDocumentScannerView: UIViewControllerRepresentable {
             for index in 0..<scan.pageCount {
                 let image = scan.imageOfPage(at: index)
                 images.append(image)
-                if configuration.mode == .scanSingle {
-                    break
-                }
             }
 
             controller.dismiss(animated: true) {

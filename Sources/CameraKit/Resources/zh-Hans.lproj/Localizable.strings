@@ -14,3 +14,7 @@
 "camera_permission_title" = "相机权限";
 "camera_error" = "出错了";
 "camera_photo_library_denied_message" = "请前往系统设置授予相册权限以导入文件。";
+"camera_mac_import_title" = "导入图片";
+"camera_mac_import_message" = "在 Mac Catalyst 上请从相册或文件夹选择图片后继续处理。";
+"camera_mac_import_photos" = "打开相册";
+"camera_mac_import_files" = "打开文件夹";

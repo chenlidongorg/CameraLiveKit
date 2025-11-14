@@ -1,8 +1,6 @@
 import SwiftUI
 import AVFoundation
-import Vision
 import UIKit
-import QuartzCore
 
 @available(iOS 15.0, *)
 struct CameraKitCaptureView: View {
@@ -28,22 +26,10 @@ struct CameraKitCaptureView: View {
         ZStack {
             CameraKitPreviewView(session: viewModel.session)
                 .ignoresSafeArea()
-                .overlay(alignment: .center) {
-                    if viewModel.shouldShowDetectionOverlay {
-                        CameraKitDetectionOverlayView(
-                            detectionRect: viewModel.detectionRect,
-                            defaultHeight: viewModel.realtimeHeight
-                        )
-                        .padding(.horizontal, 20)
-                    }
-                }
 
             VStack {
                 topBar
                 Spacer()
-                if viewModel.configuration.mode == .realTime {
-                    realtimeControls
-                }
                 bottomBar
             }
             .padding(.horizontal, 20)
@@ -127,14 +113,6 @@ struct CameraKitCaptureView: View {
         }
     }
 
-    private var realtimeControls: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(CameraKitStrings.localized("camera_realtime_hint"))
-                .font(.footnote)
-            Slider(value: $viewModel.realtimeHeight, in: 0.3...0.95)
-        }
-    }
-
     private var bottomBar: some View {
         HStack {
             if viewModel.configuration.allowsPhotoLibraryImport {
@@ -178,18 +156,11 @@ final class CameraKitCaptureViewModel: NSObject, ObservableObject {
     let configuration: CameraKitConfiguration
     let session = AVCaptureSession()
 
-    @Published var detectionRect: CGRect?
-    @Published var realtimeHeight: CGFloat
     @Published var isProcessing = false
     @Published var isShowingCropper = false
     @Published var isShowingPhotoPicker = false
     @Published var cropSourceImage: UIImage?
     @Published var alertData: AlertData?
-
-    @MainActor
-    var shouldShowDetectionOverlay: Bool {
-        configuration.mode == .realTime || configuration.enableLiveDetectionOverlay
-    }
 
     @MainActor
     var isFlashSupported: Bool { flashAvailable }
@@ -210,12 +181,7 @@ final class CameraKitCaptureViewModel: NSObject, ObservableObject {
 
     @MainActor
     var defaultCropRect: CGRect {
-        CGRect(
-            x: 0.1,
-            y: max(0.05, (1 - realtimeHeight) / 2),
-            width: 0.8,
-            height: realtimeHeight
-        )
+        CGRect(x: 0.1, y: 0.1, width: 0.8, height: 0.8)
     }
 
     private let onDismiss: () -> Void
@@ -223,15 +189,12 @@ final class CameraKitCaptureViewModel: NSObject, ObservableObject {
     fileprivate let onError: (CameraKitError) -> Void
 
     private let photoOutput = AVCapturePhotoOutput()
-    private var videoOutput: AVCaptureVideoDataOutput?
     private let sessionQueue = DispatchQueue(label: "CameraKit.Session")
-    private let detectionQueue = DispatchQueue(label: "CameraKit.Detection")
     private var currentDeviceInput: AVCaptureDeviceInput?
     private var hasStarted = false
     private var flashMode: AVCaptureDevice.FlashMode
     @Published private var flashAvailable: Bool = false
     private lazy var photoCaptureDelegate = PhotoCaptureDelegate(viewModel: self)
-    private lazy var videoDataDelegate = VideoDataDelegate(viewModel: self)
 
     @MainActor
     init(
@@ -244,8 +207,7 @@ final class CameraKitCaptureViewModel: NSObject, ObservableObject {
         self.onDismiss = onDismiss
         self.onResult = onResult
         self.onError = onError
-        self.realtimeHeight = configuration.defaultRealtimeHeight
-        self.flashMode = configuration.defaultFlashMode
+        self.flashMode = .auto
         super.init()
     }
 
@@ -364,6 +326,13 @@ final class CameraKitCaptureViewModel: NSObject, ObservableObject {
     }
 
     @MainActor
+    func presentCropper(with image: UIImage) {
+        cropSourceImage = image
+        isShowingCropper = true
+        isProcessing = false
+    }
+
+    @MainActor
     func dismissCropper() {
         isShowingCropper = false
         cropSourceImage = nil
@@ -381,8 +350,7 @@ final class CameraKitCaptureViewModel: NSObject, ObservableObject {
     @MainActor
     func handleImported(image: UIImage) {
         isShowingPhotoPicker = false
-        isProcessing = true
-        deliver(images: [image])
+        presentCropper(with: image)
     }
 
     @MainActor
@@ -416,18 +384,6 @@ final class CameraKitCaptureViewModel: NSObject, ObservableObject {
                     self.photoOutput.isHighResolutionCaptureEnabled = true
                 }
 
-                if self.configuration.enableLiveDetectionOverlay {
-                    let videoOutput = AVCaptureVideoDataOutput()
-                    videoOutput.videoSettings = [
-                        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-                    ]
-                    videoOutput.alwaysDiscardsLateVideoFrames = true
-                    videoOutput.setSampleBufferDelegate(self.videoDataDelegate, queue: self.detectionQueue)
-                    if self.session.canAddOutput(videoOutput) {
-                        self.session.addOutput(videoOutput)
-                        self.videoOutput = videoOutput
-                    }
-                }
             } catch {
                 DispatchQueue.main.async {
                     self.alertData = AlertData(
@@ -520,79 +476,10 @@ private final class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegat
 
         Task { @MainActor [weak viewModel = viewModel] in
             guard let viewModel else { return }
-            if viewModel.configuration.allowsPostCaptureCropping {
-                viewModel.isProcessing = false
-                viewModel.cropSourceImage = image
-                viewModel.isShowingCropper = true
-            } else {
-                viewModel.deliver(images: [image])
-            }
-        }
-    }
-}
-
-@available(iOS 15.0, *)
-private final class VideoDataDelegate: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
-    weak var viewModel: CameraKitCaptureViewModel?
-    private lazy var rectangleRequest: VNDetectRectanglesRequest = {
-        let request = VNDetectRectanglesRequest { [weak self] request, error in
-            self?.handle(rectangles: request, error: error)
-        }
-        request.minimumAspectRatio = 0.3
-        request.maximumAspectRatio = 1.0
-        request.minimumConfidence = 0.5
-        return request
-    }()
-    private var lastDetectionTime: TimeInterval = 0
-
-    init(viewModel: CameraKitCaptureViewModel) {
-        self.viewModel = viewModel
-        super.init()
-    }
-
-    func captureOutput(
-        _ output: AVCaptureOutput,
-        didOutput sampleBuffer: CMSampleBuffer,
-        from connection: AVCaptureConnection
-    ) {
-        let now = CACurrentMediaTime()
-        guard now - lastDetectionTime > 0.2 else { return }
-        lastDetectionTime = now
-
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
-        do {
-            try handler.perform([rectangleRequest])
-        } catch {
-            Task { @MainActor [weak viewModel = viewModel] in
-                viewModel?.detectionRect = nil
-            }
-        }
-    }
-
-    private func handle(rectangles request: VNRequest, error: Error?) {
-        guard error == nil,
-              let results = request.results as? [VNRectangleObservation],
-              let best = results.max(by: { $0.confidence < $1.confidence }) else {
-            Task { @MainActor [weak viewModel = viewModel] in
-                viewModel?.detectionRect = nil
-            }
-            return
-        }
-
-        let converted = CGRect(
-            x: best.boundingBox.origin.x,
-            y: 1 - best.boundingBox.origin.y - best.boundingBox.size.height,
-            width: best.boundingBox.size.width,
-            height: best.boundingBox.size.height
-        )
-
-        Task { @MainActor [weak viewModel = viewModel] in
-            viewModel?.detectionRect = converted
+            viewModel.presentCropper(with: image)
         }
     }
 }
 
 @available(iOS 15.0, *)
 extension CameraKitCaptureViewModel: @unchecked Sendable {}
-

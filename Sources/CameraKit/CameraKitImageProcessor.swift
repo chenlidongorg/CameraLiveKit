@@ -19,7 +19,7 @@ enum CameraKitImageProcessor {
                 throw CameraKitError.processingFailed
             }
             let enhanced = enhance(image: normalized, mode: configuration.enhancement)
-            let resized = resizeIfNeeded(image: enhanced, quality: configuration.outputQuality)
+            let resized = resizeIfNeeded(image: enhanced, maxWidth: configuration.maxOutputWidth)
             processed.append(resized)
             originals.append(normalized)
         }
@@ -46,14 +46,13 @@ enum CameraKitImageProcessor {
         return UIImage(cgImage: cropped, scale: normalized.scale, orientation: normalized.imageOrientation)
     }
 
-    private static func resizeIfNeeded(image: UIImage, quality: CameraKitOutputQuality) -> UIImage {
-        guard let targetSize = resolveTargetSize(
-            for: image.size,
-            maxWidth: quality.maxOutputWidth,
-            targetResolution: quality.targetResolution
-        ), targetSize != image.size else {
+    private static func resizeIfNeeded(image: UIImage, maxWidth: CGFloat?) -> UIImage {
+        guard let maxWidth, maxWidth > 0, image.size.width > maxWidth else {
             return image
         }
+
+        let ratio = maxWidth / image.size.width
+        let targetSize = CGSize(width: maxWidth, height: image.size.height * ratio)
 
         let format = UIGraphicsImageRendererFormat.preferred()
         format.scale = image.scale
@@ -62,37 +61,11 @@ enum CameraKitImageProcessor {
             image.draw(in: CGRect(origin: .zero, size: targetSize))
         }
 
-        guard let data = resized.jpegData(compressionQuality: quality.compressionQuality),
+        guard let data = resized.jpegData(compressionQuality: 0.85),
               let recomposed = UIImage(data: data) else {
             return resized
         }
         return recomposed
-    }
-
-    private static func resolveTargetSize(
-        for original: CGSize,
-        maxWidth: CGFloat?,
-        targetResolution: CGSize?
-    ) -> CGSize? {
-        let width = original.width
-        let height = original.height
-
-        if let maxWidth, maxWidth > 0, width > maxWidth {
-            let ratio = maxWidth / width
-            return CGSize(width: maxWidth, height: height * ratio)
-        }
-
-        guard let target = targetResolution, target.width > 0, target.height > 0 else {
-            return nil
-        }
-
-        let widthRatio = target.width / width
-        let heightRatio = target.height / height
-        let scale = min(widthRatio, heightRatio, 1)
-        guard scale < 1 else {
-            return nil
-        }
-        return CGSize(width: width * scale, height: height * scale)
     }
 
     private static func enhance(image: UIImage, mode: CameraKitEnhancement) -> UIImage {

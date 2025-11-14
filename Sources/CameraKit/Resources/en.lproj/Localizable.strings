@@ -14,3 +14,7 @@
 "camera_permission_title" = "Camera Permission";
 "camera_error" = "Error";
 "camera_photo_library_denied_message" = "Allow Photo Library access in Settings to import files.";
+"camera_mac_import_title" = "Import images";
+"camera_mac_import_message" = "On macCatalyst, choose photos from your library or files to keep processing.";
+"camera_mac_import_photos" = "Photos";
+"camera_mac_import_files" = "Files";
