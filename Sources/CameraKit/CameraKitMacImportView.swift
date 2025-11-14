@@ -51,41 +51,42 @@ struct CameraKitMacImportView: View {
 
                 Spacer()
 
-                VStack(spacing: 12) {
-                    Text(CameraKitStrings.localized("camera_mac_import_title"))
-                        .font(.title2)
-                        .foregroundColor(.white)
-                    Text(CameraKitStrings.localized("camera_mac_import_message"))
-                        .font(.body)
-                        .foregroundColor(.white.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 20)
+                VStack(spacing: 18) {
+                    VStack(spacing: 12) {
+                        Text(CameraKitStrings.localized("camera_mac_import_title"))
+                            .font(.title2.weight(.semibold))
+                            .foregroundColor(.white)
+                        Text(CameraKitStrings.localized("camera_mac_import_message"))
+                            .font(.body)
+                            .foregroundColor(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 20)
 
-                HStack(spacing: 20) {
-                    Button(action: { activePicker = .photos }) {
-                        Label(
-                            CameraKitStrings.localized("camera_mac_import_photos"),
+                    VStack(spacing: 12) {
+                        actionButton(
+                            titleKey: "camera_mac_import_photos",
                             systemImage: "photo.on.rectangle"
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.white.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
+                        ) {
+                            activePicker = .photos
+                        }
 
-                    Button(action: { activePicker = .files }) {
-                        Label(
-                            CameraKitStrings.localized("camera_mac_import_files"),
+                        actionButton(
+                            titleKey: "camera_mac_import_files",
                             systemImage: "folder"
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.white.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        ) {
+                            activePicker = .files
+                        }
+
+                        Divider()
+                            .background(Color.white.opacity(0.2))
+
+                        cancelButton(titleKey: "camera_cancel", action: onDismiss)
                     }
+                    .padding(20)
+                    .background(Color.white.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-                .foregroundColor(.white)
 
                 Spacer()
             }
@@ -148,6 +149,52 @@ struct CameraKitMacImportView: View {
                 dismissButton: .default(Text(CameraKitStrings.localized("camera_done")))
             )
         }
+    }
+
+    @ViewBuilder
+    private func actionButton(
+        titleKey: String,
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: systemImage)
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 28)
+                Text(CameraKitStrings.localized(titleKey))
+                    .font(.headline)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .opacity(0.5)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity)
+            .background(Color.white.opacity(0.14))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundColor(.white)
+    }
+
+    @ViewBuilder
+    private func cancelButton(titleKey: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Spacer()
+                Text(CameraKitStrings.localized(titleKey))
+                    .font(.body.weight(.semibold))
+                Spacer()
+            }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .background(Color.white.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundColor(.white.opacity(0.9))
     }
 
     private func handlePicked(images: [UIImage]) {
