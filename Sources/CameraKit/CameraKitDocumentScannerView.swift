@@ -106,7 +106,7 @@ struct CameraKitDocumentScannerView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.9))
+        .background(Color(UIColor.systemBackground).opacity(0.9))
     }
 }
 #endif

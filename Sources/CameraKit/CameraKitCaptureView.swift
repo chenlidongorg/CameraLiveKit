@@ -34,19 +34,19 @@ struct CameraKitCaptureView: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 32)
-            .foregroundColor(.white)
+            .foregroundColor(.primary)
 
             if viewModel.isProcessing {
-                Color.black.opacity(0.4)
+                Color(UIColor.systemBackground).opacity(0.4)
                     .ignoresSafeArea()
                 VStack(spacing: 12) {
                     CameraKitActivityIndicator()
                     Text(CameraKitStrings.localized("camera_processing"))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                 }
             }
         }
-        .background(Color.black.ignoresSafeArea())
+        .background(Color(UIColor.systemBackground).ignoresSafeArea())
         .onAppear { viewModel.startSession() }
         .onDisappear { viewModel.stopSession() }
         .fullScreenCover(isPresented: $viewModel.isShowingCropper) {
@@ -88,7 +88,7 @@ struct CameraKitCaptureView: View {
             Button(action: { viewModel.cancelFlow() }) {
                 Image(systemName: "xmark")
                     .padding(10)
-                    .background(Color.black.opacity(0.4))
+                    .background(Color(UIColor.systemBackground).opacity(0.4))
                     .clipShape(Circle())
             }
 
@@ -98,7 +98,7 @@ struct CameraKitCaptureView: View {
                 Button(action: { viewModel.toggleFlashMode() }) {
                     Image(systemName: viewModel.flashIconName)
                         .padding(10)
-                        .background(Color.black.opacity(0.4))
+                        .background(Color(UIColor.systemBackground).opacity(0.4))
                         .clipShape(Circle())
                 }
                 .padding(.trailing, 8)
@@ -107,7 +107,7 @@ struct CameraKitCaptureView: View {
             Button(action: { viewModel.switchCamera() }) {
                 Image(systemName: "arrow.triangle.2.circlepath.camera")
                     .padding(10)
-                    .background(Color.black.opacity(0.4))
+                    .background(Color(UIColor.systemBackground).opacity(0.4))
                     .clipShape(Circle())
             }
         }
@@ -127,11 +127,11 @@ struct CameraKitCaptureView: View {
 
             Button(action: { viewModel.capturePhoto() }) {
                 Circle()
-                    .strokeBorder(Color.white, lineWidth: 4)
+                    .strokeBorder(Color.primary, lineWidth: 4)
                     .frame(width: 72, height: 72)
                     .overlay(
                         Circle()
-                            .fill(Color.white)
+                            .fill(Color.primary)
                             .frame(width: 58, height: 58)
                     )
             }

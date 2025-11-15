@@ -43,7 +43,7 @@ struct CameraKitMacImportView: View {
                     Button(action: { onDismiss() }) {
                         Image(systemName: "xmark")
                             .padding(10)
-                            .background(Color.black.opacity(0.4))
+                            .background(Color(UIColor.systemBackground).opacity(0.4))
                             .clipShape(Circle())
                     }
                     Spacer()
@@ -55,10 +55,10 @@ struct CameraKitMacImportView: View {
                     VStack(spacing: 12) {
                         Text(CameraKitStrings.localized("camera_mac_import_title"))
                             .font(.title2.weight(.semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                         Text(CameraKitStrings.localized("camera_mac_import_message"))
                             .font(.body)
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.primary.opacity(0.8))
                             .multilineTextAlignment(.center)
                     }
                     .padding(.horizontal, 20)
@@ -79,12 +79,12 @@ struct CameraKitMacImportView: View {
                         }
 
                         Divider()
-                            .background(Color.white.opacity(0.2))
+                            .background(Color.primary.opacity(0.2))
 
                         cancelButton(titleKey: "camera_cancel", action: onDismiss)
                     }
                     .padding(20)
-                    .background(Color.white.opacity(0.08))
+                    .background(Color.primary.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
 
@@ -93,16 +93,16 @@ struct CameraKitMacImportView: View {
             .padding(32)
 
             if isProcessing {
-                Color.black.opacity(0.4)
+                Color(UIColor.systemBackground).opacity(0.4)
                     .ignoresSafeArea()
                 VStack(spacing: 12) {
                     CameraKitActivityIndicator()
                     Text(CameraKitStrings.localized("camera_processing"))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                 }
             }
         }
-        .background(Color.black.ignoresSafeArea())
+        .background(Color(UIColor.systemBackground).ignoresSafeArea())
         .sheet(item: $activePicker) { picker in
             switch picker {
             case .photos:
@@ -172,11 +172,11 @@ struct CameraKitMacImportView: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
             .frame(maxWidth: .infinity)
-            .background(Color.white.opacity(0.14))
+            .background(Color.primary.opacity(0.14))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-        .foregroundColor(.white)
+        .foregroundColor(.primary)
     }
 
     @ViewBuilder
@@ -190,11 +190,11 @@ struct CameraKitMacImportView: View {
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
-            .background(Color.white.opacity(0.05))
+            .background(Color.primary.opacity(0.05))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
-        .foregroundColor(.white.opacity(0.9))
+        .foregroundColor(.primary.opacity(0.9))
     }
 
     private func handlePicked(images: [UIImage]) {

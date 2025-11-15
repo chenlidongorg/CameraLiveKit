@@ -28,7 +28,7 @@ struct CameraKitCropView: View {
         NavigationView {
             GeometryReader { geometry in
                 ZStack {
-                    Color.black.ignoresSafeArea()
+                    Color(UIColor.systemBackground).ignoresSafeArea()
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
@@ -39,7 +39,7 @@ struct CameraKitCropView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(CameraKitStrings.localized("camera_cancel"), action: onCancel)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(CameraKitStrings.localized("camera_crop_done")) {
@@ -49,13 +49,13 @@ struct CameraKitCropView: View {
                         }
                         onDone(cropped)
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 }
                 ToolbarItem(placement: .bottomBar) {
                     Button(CameraKitStrings.localized("camera_crop_reset")) {
                         normalizedRect = defaultRect
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 }
             }
         }
@@ -74,12 +74,12 @@ struct CameraKitCropView: View {
             path.addRect(CGRect(origin: .zero, size: size))
             path.addRoundedRect(in: actualRect, cornerSize: CGSize(width: 18, height: 18))
         }
-        .fill(Color.black.opacity(0.5), style: FillStyle(eoFill: true, antialiased: true))
+        .fill(Color(UIColor.systemBackground).opacity(0.5), style: FillStyle(eoFill: true, antialiased: true))
 
         return ZStack {
             overlay
             RoundedRectangle(cornerRadius: 18)
-                .stroke(Color.white, lineWidth: 2)
+                .stroke(Color.primary, lineWidth: 2)
                 .frame(width: actualRect.width, height: actualRect.height)
                 .position(x: actualRect.midX, y: actualRect.midY)
                 .contentShape(Rectangle())
@@ -118,7 +118,7 @@ struct CameraKitCropView: View {
             let index = element.offset
             let point = element.element
             Circle()
-                .fill(Color.white)
+                .fill(Color.primary)
                 .frame(width: handleSize, height: handleSize)
                 .position(
                     x: imageFrame.origin.x + point.x * imageFrame.width,
