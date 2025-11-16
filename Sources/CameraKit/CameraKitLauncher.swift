@@ -9,7 +9,7 @@ public struct CameraKitLauncher<Label: View>: View {
     private let onOriginalImageResult: (([UIImage]) -> Void)?
     private let onCancel: () -> Void
     private let onError: (CameraKitError) -> Void
-    private let label: () -> Label
+    private let label: () -> Label?
 
     @State private var isPresented = false
 
@@ -89,7 +89,7 @@ public struct CameraKitLauncherButton: View {
 }
 
 @available(iOS 15.0, *)
-struct CameraKitContainerView: View {
+public struct CameraKitContainerView: View {
     @Environment(\.dismiss) private var dismiss
 
     let configuration: CameraKitConfiguration
@@ -99,7 +99,7 @@ struct CameraKitContainerView: View {
     let onCancel: () -> Void
     let onError: (CameraKitError) -> Void
 
-    var body: some View {
+    public var body: some View {
         Group {
 #if targetEnvironment(macCatalyst)
             CameraKitMacImportView(
