@@ -99,6 +99,23 @@ public struct CameraKitContainerView: View {
     let onCancel: () -> Void
     let onError: (CameraKitError) -> Void
 
+    
+    public init(
+        configuration: CameraKitConfiguration,
+        isPresented:Binding<Bool>,
+        onResult: @escaping ([UIImage]) -> Void,
+        onOriginalImageResult: (([UIImage]) -> Void)? = nil,
+        onCancel: @escaping () -> Void,
+        onError: @escaping (CameraKitError) -> Void
+    ) {
+        self.configuration = configuration
+        self._isPresented = isPresented
+        self.onResult = onResult
+        self.onOriginalImageResult = onOriginalImageResult
+        self.onCancel = onCancel
+        self.onError = onError
+    }
+    
     public var body: some View {
         Group {
 #if targetEnvironment(macCatalyst)
