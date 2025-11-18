@@ -250,13 +250,25 @@ private struct CameraKitMacPhotosPicker: UIViewControllerRepresentable {
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = context.coordinator
         picker.modalPresentationStyle = .fullScreen
+        context.coordinator.pickerController = picker
+#if targetEnvironment(macCatalyst)
+        context.coordinator.ensureMacCloseButton(on: picker)
+#endif
         return picker
     }
 
-    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {
+#if targetEnvironment(macCatalyst)
+        context.coordinator.ensureMacCloseButton(on: uiViewController)
+#endif
+    }
 
     final class Coordinator: NSObject, PHPickerViewControllerDelegate {
         let parent: CameraKitMacPhotosPicker
+        weak var pickerController: PHPickerViewController?
+#if targetEnvironment(macCatalyst)
+        private weak var cancelButton: UIButton?
+#endif
 
         init(parent: CameraKitMacPhotosPicker) {
             self.parent = parent
@@ -292,6 +304,43 @@ private struct CameraKitMacPhotosPicker: UIViewControllerRepresentable {
                 }
             }
         }
+
+#if targetEnvironment(macCatalyst)
+        func ensureMacCloseButton(on picker: PHPickerViewController) {
+            pickerController = picker
+            picker.loadViewIfNeeded()
+            if cancelButton?.superview !== picker.view {
+                cancelButton?.removeFromSuperview()
+                cancelButton = nil
+                addCloseButton(to: picker)
+            }
+        }
+
+        private func addCloseButton(to picker: PHPickerViewController) {
+            let button = UIButton(type: .close)
+            button.translatesAutoresizingMaskIntoConstraints = false
+            button.tintColor = .label
+            button.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.85)
+            button.layer.cornerRadius = 18
+            button.accessibilityLabel = CameraKitStrings.localized("camera_cancel")
+            button.addTarget(self, action: #selector(handleMacCancelTapped), for: .touchUpInside)
+
+            picker.view.addSubview(button)
+            NSLayoutConstraint.activate([
+                button.leadingAnchor.constraint(equalTo: picker.view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+                button.topAnchor.constraint(equalTo: picker.view.safeAreaLayoutGuide.topAnchor, constant: 14),
+                button.widthAnchor.constraint(equalToConstant: 36),
+                button.heightAnchor.constraint(equalToConstant: 36)
+            ])
+
+            cancelButton = button
+        }
+
+        @objc private func handleMacCancelTapped() {
+            pickerController?.dismiss(animated: true)
+            parent.onCancel()
+        }
+#endif
     }
 }
 
