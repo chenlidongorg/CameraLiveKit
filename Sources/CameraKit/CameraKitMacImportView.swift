@@ -106,11 +106,18 @@ struct CameraKitMacImportView: View {
         .sheet(item: $activePicker) { picker in
             switch picker {
             case .photos:
+                
                 CameraKitMacPhotosPicker(
                     selectionLimit: requiresCrop ? 1 : 0,
                     onImages: handlePicked(images:),
                     onCancel: { activePicker = nil }
                 )
+                .overlay(Text("Close").padding(.leading,90).onTapGesture {
+                    
+                    activePicker = nil
+                    
+                }, alignment: .topTrailing)
+                
             case .files:
                 CameraKitMacDocumentPicker(
                     allowsMultipleSelection: !requiresCrop,
@@ -328,7 +335,7 @@ private struct CameraKitMacPhotosPicker: UIViewControllerRepresentable {
             picker.view.addSubview(button)
             NSLayoutConstraint.activate([
                 button.leadingAnchor.constraint(equalTo: picker.view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-                button.topAnchor.constraint(equalTo: picker.view.safeAreaLayoutGuide.topAnchor, constant: 14),
+                button.bottomAnchor.constraint(equalTo: picker.view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
                 button.widthAnchor.constraint(equalToConstant: 36),
                 button.heightAnchor.constraint(equalToConstant: 36)
             ])
