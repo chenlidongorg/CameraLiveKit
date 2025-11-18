@@ -10,32 +10,32 @@ struct CameraKitMacImportView: View {
     enum ActivePicker: Identifiable {
         case photos
         case files
-
+        
         var id: Int { hashValue }
     }
-
+    
     struct AlertData: Identifiable {
         let id = UUID()
         let title: String
         let message: String
     }
-
+    
     let configuration: CameraKitConfiguration
     let requiresCrop: Bool
     let onDismiss: () -> Void
     let onResult: ([UIImage], [UIImage]) -> Void
     let onError: (CameraKitError) -> Void
-
+    
     @State private var activePicker: ActivePicker?
     @State private var cropSourceImage: UIImage?
     @State private var isShowingCropper = false
     @State private var isProcessing = false
     @State private var alertData: AlertData?
-
+    
     private var defaultCropRect: CGRect {
         CGRect(x: 0.1, y: 0.1, width: 0.8, height: 0.8)
     }
-
+    
     var body: some View {
         ZStack {
             VStack(spacing: 32) {
@@ -48,9 +48,9 @@ struct CameraKitMacImportView: View {
                     }
                     Spacer()
                 }
-
+                
                 Spacer()
-
+                
                 VStack(spacing: 18) {
                     VStack(spacing: 12) {
                         Text(CameraKitStrings.localized("camera_mac_import_title"))
@@ -62,7 +62,7 @@ struct CameraKitMacImportView: View {
                             .multilineTextAlignment(.center)
                     }
                     .padding(.horizontal, 20)
-
+                    
                     VStack(spacing: 12) {
                         actionButton(
                             titleKey: "camera_mac_import_photos",
@@ -70,28 +70,28 @@ struct CameraKitMacImportView: View {
                         ) {
                             activePicker = .photos
                         }
-
+                        
                         actionButton(
                             titleKey: "camera_mac_import_files",
                             systemImage: "folder"
                         ) {
                             activePicker = .files
                         }
-
+                        
                         Divider()
                             .background(Color.primary.opacity(0.2))
-
+                        
                         cancelButton(titleKey: "camera_cancel", action: onDismiss)
                     }
                     .padding(20)
                     .background(Color.primary.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-
+                
                 Spacer()
             }
             .padding(32)
-
+            
             if isProcessing {
                 Color(UIColor.systemBackground).opacity(0.4)
                     .ignoresSafeArea()
@@ -112,12 +112,24 @@ struct CameraKitMacImportView: View {
                     onImages: handlePicked(images:),
                     onCancel: { activePicker = nil }
                 )
-                .overlay(Text("Close").padding(.leading,90).onTapGesture {
+#if targetEnvironment(macCatalyst)
+                .overlay(
                     
-                    activePicker = nil
+                        
+                        Text(
+                            CameraKitStrings
+                                .localized("camera_cancel"))
+                        .padding()
+                        .onTapGesture {
+                            
+                            activePicker = nil
+                            
+                        }
+                            .offset(x:-114)
                     
-                }, alignment: .topTrailing)
-                
+
+                    , alignment: .topTrailing)
+#endif
             case .files:
                 CameraKitMacDocumentPicker(
                     allowsMultipleSelection: !requiresCrop,
@@ -157,7 +169,7 @@ struct CameraKitMacImportView: View {
             )
         }
     }
-
+    
     @ViewBuilder
     private func actionButton(
         titleKey: String,
@@ -185,7 +197,7 @@ struct CameraKitMacImportView: View {
         .buttonStyle(.plain)
         .foregroundColor(.primary)
     }
-
+    
     @ViewBuilder
     private func cancelButton(titleKey: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -203,7 +215,7 @@ struct CameraKitMacImportView: View {
         .buttonStyle(.plain)
         .foregroundColor(.primary.opacity(0.9))
     }
-
+    
     private func handlePicked(images: [UIImage]) {
         activePicker = nil
         guard !images.isEmpty else { return }
@@ -214,7 +226,7 @@ struct CameraKitMacImportView: View {
             process(images: images)
         }
     }
-
+    
     private func process(images: [UIImage]) {
         isProcessing = true
         Task.detached(priority: .userInitiated) {
@@ -238,6 +250,8 @@ struct CameraKitMacImportView: View {
     }
 }
 
+
+
 // MARK: - Photo picker
 
 @available(iOS 15.0, *)
@@ -245,11 +259,11 @@ private struct CameraKitMacPhotosPicker: UIViewControllerRepresentable {
     let selectionLimit: Int
     let onImages: ([UIImage]) -> Void
     let onCancel: () -> Void
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
     }
-
+    
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var configuration = PHPickerConfiguration(photoLibrary: .shared())
         configuration.filter = .images
@@ -258,39 +272,33 @@ private struct CameraKitMacPhotosPicker: UIViewControllerRepresentable {
         picker.delegate = context.coordinator
         picker.modalPresentationStyle = .fullScreen
         context.coordinator.pickerController = picker
-#if targetEnvironment(macCatalyst)
-        context.coordinator.ensureMacCloseButton(on: picker)
-#endif
+        
         return picker
     }
-
+    
     func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {
-#if targetEnvironment(macCatalyst)
-        context.coordinator.ensureMacCloseButton(on: uiViewController)
-#endif
+        
     }
-
+    
     final class Coordinator: NSObject, PHPickerViewControllerDelegate {
         let parent: CameraKitMacPhotosPicker
         weak var pickerController: PHPickerViewController?
-#if targetEnvironment(macCatalyst)
-        private weak var cancelButton: UIButton?
-#endif
-
+        
+        
         init(parent: CameraKitMacPhotosPicker) {
             self.parent = parent
         }
-
+        
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             picker.dismiss(animated: true)
             guard !results.isEmpty else {
                 parent.onCancel()
                 return
             }
-
+            
             var loadedImages: [UIImage] = []
             let dispatchGroup = DispatchGroup()
-
+            
             for result in results {
                 if result.itemProvider.canLoadObject(ofClass: UIImage.self) {
                     dispatchGroup.enter()
@@ -302,7 +310,7 @@ private struct CameraKitMacPhotosPicker: UIViewControllerRepresentable {
                     }
                 }
             }
-
+            
             dispatchGroup.notify(queue: .main) {
                 if loadedImages.isEmpty {
                     self.parent.onCancel()
@@ -311,43 +319,7 @@ private struct CameraKitMacPhotosPicker: UIViewControllerRepresentable {
                 }
             }
         }
-
-#if targetEnvironment(macCatalyst)
-        func ensureMacCloseButton(on picker: PHPickerViewController) {
-            pickerController = picker
-            picker.loadViewIfNeeded()
-            if cancelButton?.superview !== picker.view {
-                cancelButton?.removeFromSuperview()
-                cancelButton = nil
-                addCloseButton(to: picker)
-            }
-        }
-
-        private func addCloseButton(to picker: PHPickerViewController) {
-            let button = UIButton(type: .close)
-            button.translatesAutoresizingMaskIntoConstraints = false
-            button.tintColor = .label
-            button.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.85)
-            button.layer.cornerRadius = 18
-            button.accessibilityLabel = CameraKitStrings.localized("camera_cancel")
-            button.addTarget(self, action: #selector(handleMacCancelTapped), for: .touchUpInside)
-
-            picker.view.addSubview(button)
-            NSLayoutConstraint.activate([
-                button.leadingAnchor.constraint(equalTo: picker.view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-                button.bottomAnchor.constraint(equalTo: picker.view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
-                button.widthAnchor.constraint(equalToConstant: 36),
-                button.heightAnchor.constraint(equalToConstant: 36)
-            ])
-
-            cancelButton = button
-        }
-
-        @objc private func handleMacCancelTapped() {
-            pickerController?.dismiss(animated: true)
-            parent.onCancel()
-        }
-#endif
+        
     }
 }
 
@@ -358,11 +330,11 @@ private struct CameraKitMacDocumentPicker: UIViewControllerRepresentable {
     let allowsMultipleSelection: Bool
     let onImages: ([UIImage]) -> Void
     let onCancel: () -> Void
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
     }
-
+    
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.image])
         picker.delegate = context.coordinator
@@ -370,20 +342,20 @@ private struct CameraKitMacDocumentPicker: UIViewControllerRepresentable {
         picker.modalPresentationStyle = .fullScreen
         return picker
     }
-
+    
     func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
-
+    
     final class Coordinator: NSObject, UIDocumentPickerDelegate {
         let parent: CameraKitMacDocumentPicker
-
+        
         init(parent: CameraKitMacDocumentPicker) {
             self.parent = parent
         }
-
+        
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
             parent.onCancel()
         }
-
+        
         func documentPicker(
             _ controller: UIDocumentPickerViewController,
             didPickDocumentsAt urls: [URL]
@@ -397,7 +369,7 @@ private struct CameraKitMacDocumentPicker: UIViewControllerRepresentable {
                     images.append(image)
                 }
             }
-
+            
             if images.isEmpty {
                 parent.onCancel()
             } else {

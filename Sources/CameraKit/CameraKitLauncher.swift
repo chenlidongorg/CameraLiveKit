@@ -126,6 +126,7 @@ public struct CameraKitContainerView: View {
                 onResult: handleResults(processed:originals:),
                 onError: onError
             )
+            .frame(maxWidth: 600)
 #else
             if configuration.mode.usesDocumentScanner {
                 CameraKitDocumentScannerView(
