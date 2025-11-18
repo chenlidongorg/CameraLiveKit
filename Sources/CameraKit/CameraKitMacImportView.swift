@@ -116,16 +116,19 @@ struct CameraKitMacImportView: View {
                 .overlay(
                     
                         
-                        Text(
-                            CameraKitStrings
-                                .localized("camera_cancel"))
+                        Image(systemName: "xmark")
+                            .padding(10)
+                            .background(Color(UIColor.systemBackground).opacity(0.4))
+                            .clipShape(Circle())
+                            .foregroundStyle(.primary)
+                        
                         .padding()
                         .onTapGesture {
                             
                             activePicker = nil
                             
                         }
-                            .offset(x:-114)
+                            .offset(x: -72)
                     
 
                     , alignment: .topTrailing)
