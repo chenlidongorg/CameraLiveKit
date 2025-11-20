@@ -1,4 +1,4 @@
-#if targetEnvironment(macCatalyst)
+#if targetEnvironment(macCatalyst) || targetEnvironment(simulator)
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
@@ -112,7 +112,7 @@ struct CameraKitMacImportView: View {
                     onImages: handlePicked(images:),
                     onCancel: { activePicker = nil }
                 )
-#if targetEnvironment(macCatalyst)
+#if targetEnvironment(macCatalyst) || targetEnvironment(simulator)
                 .overlay(
                     
                         
