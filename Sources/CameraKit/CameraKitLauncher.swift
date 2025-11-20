@@ -118,7 +118,7 @@ public struct CameraKitContainerView: View {
     
     public var body: some View {
         Group {
-#if targetEnvironment(macCatalyst)
+#if targetEnvironment(macCatalyst) || targetEnvironment(simulator)
             CameraKitMacImportView(
                 configuration: configuration,
                 requiresCrop: !configuration.mode.usesDocumentScanner,
